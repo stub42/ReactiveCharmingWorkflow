@@ -157,7 +157,9 @@ the common case of publishing what you just pushed without cut and paste)
 
 Once testing is over, you can publish your stable branch. I keep the
 tested releases on the built branch, with each revision corresponding
-to a stable release in the charm store:
+to a stable release in the charm store. We tag the released revision with
+the charm store revision so we can easily match deployed units with
+the code they are running:
 
 ```sh
     cd $LAYER_PATH/$CNAME
