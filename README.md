@@ -107,28 +107,31 @@ http://interfaces.juju.solutions if they are not found there. Use
 After committing changes to your master branch, you can generate and
 commit a proper build, which takes a few steps:
 
-    1. Clean the build area of artifacts from WIP builds and cowboys:
-       ```sh
-       cd $JUJU_REPOSITORY/$CNAME
-       git reset --hard test-built
-       git clean -ffd
-       ```
-    2. Merge the primary layer without committing. Our build will be linked
-       to the source revision and share revision history:
-       ```sh
-       cd $JUJU_REPOSITORY/$CNAME
-       git merge --log --no-commit -s ours master
-       ```
-    3. Regenerate the charm:
-       ```sh
-       charm build -f -o $JUJU_REPOSITORY -n $CNAME $LAYER_PATH/$CNAME
-       ```
-    4. Finalize the commit:
-       ```sh
-       cd $JUJU_REPOSITORY/$CNAME
-       git add .
-       git commit -m 'charm-build of master'
-       ```
+1. Clean the build area of artifacts from WIP builds and cowboys:
+   ```sh
+   cd $JUJU_REPOSITORY/$CNAME
+   git reset --hard test-built
+   git clean -ffd
+   ```
+   
+2. Merge the primary layer without committing. Our build will be linked
+   to the source revision and share revision history:
+   ```sh
+   cd $JUJU_REPOSITORY/$CNAME
+   git merge --log --no-commit -s ours master
+   ```
+
+3. Regenerate the charm:
+   ```sh
+   charm build -f -o $JUJU_REPOSITORY -n $CNAME $LAYER_PATH/$CNAME
+   ```
+   
+4. Finalize the commit:
+   ```sh
+   cd $JUJU_REPOSITORY/$CNAME
+   git add .
+   git commit -m 'charm-build of master'
+   ```
 
 You now have a test-built branch of the generated charm containing all the
 revision history. This is your development release. Test it locally, or
