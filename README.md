@@ -2,6 +2,9 @@
 
 An opinionated guide by stub.
 
+Feedback welcome. If you learn something here, great. If I learn something
+here, even better.
+
 
 ## Basic Filesystem Layout
 
@@ -134,10 +137,12 @@ commit a proper build, which takes a few steps:
    ```
 
 You now have a test-built branch of the generated charm containing all the
-revision history. This is your development release. Test it locally, or
+revision history, with every change traceable to a build or back to the
+source change. This is your development release. Test it locally, or
 publish it to the charm store for others to test. You can publish directly
-from `$JUJU_REPOSITORY/$CNAME` if it is clean, or do it this way to guarantee
-only tracked files get uploaded and no secrets or messy temporary artifacts:
+from `$JUJU_REPOSITORY/$CNAME` if it is clean, or do it the following
+way to guarantee only tracked files get uploaded and no secrets or messy
+temporary artifacts:
 
 ```sh
 cd $LAYER_PATH/$CNAME
