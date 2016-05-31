@@ -102,8 +102,8 @@ cd $LAYER_PATH/$CNAME
 charm build -f -o $JUJU_REPOSITORY -n $CNAME
 ```
 
-/!\ Note that dependencies are pulled from `$LAYER_PATH` and `$INTERFACE_PATH`
-if they exist, falling back to the branches registered at
+:warning: Note that dependencies are pulled from `$LAYER_PATH` and
+`$INTERFACE_PATH` if they exist, falling back to the branches registered at
 http://interfaces.juju.solutions if they are not found there. Use
 `charm build --no-local-layers` to override this behavior.
 
@@ -121,19 +121,22 @@ commit a proper build, which takes a few steps:
    to the source revision and share revision history:
    ```sh
    cd $JUJU_REPOSITORY/$CNAME
-   git merge --log --no-commit -s ours master
+   git merge --log --no-commit -s ours -m "charm-build of master" master
    ```
 
 3. Regenerate the charm:
    ```sh
+   cd $LAYER_PATH/$CNAME
+   git stash save --all
    charm build -f -o $JUJU_REPOSITORY -n $CNAME $LAYER_PATH/$CNAME
+   git stash pop
    ```
    
 4. Finalize the commit:
    ```sh
    cd $JUJU_REPOSITORY/$CNAME
    git add .
-   git commit -m 'charm-build of master'
+   git commit --no-edit
    ```
 
 You now have a test-built branch of the generated charm containing all the
@@ -166,7 +169,7 @@ the code they are running:
     git branch built test-built
     git clone --no-single-branch -b built . tmp-built
     cd tmp-built
-    git merge --no-ff origin/test-built --log -m 'charm-build of master'
+    git merge --no-ff origin/test-built --log --no-edit
     export _built_rev=`charm push . $CNAME 2>&1 \
         | tee /dev/tty | grep url: | cut -f 2 -d ' '`
     git tag `echo $_built_rev | tr -s '~:/' -`
@@ -175,3 +178,45 @@ the code they are running:
     cd ..
     rm -rf tmp-built
 ```
+
+=== Makefile ===
+
+The above guides can be converted to Makefile rules:
+
+https://github.com/stub42/ReactiveCharmingWorkflow/blob/master/Makefile
+
+=== Future ===
+
+After documenting the above processes, it becomes apparent that charm-tools,
+charms.reactive and git still don't mesh well. From a developer perspective,
+it is far too complex to say 'publish this branch'. With charms.reactive,
+a charm is now akin to a binary package and must first be built. charm-tools
+does not help, as it chose to be tool agnostic so you are stuck juggling
+all the VCS details yourself. I think a more opinionated tool would be
+much more transparent, providing charmers with the scafolding they need and
+being much easier to integrate with CI systems for testing and final
+publication. I think that git plugins would provide the best UI.
+
+- [ ] `git charm build [--log] [-m msg] [branch]`
+
+    - charm-build to the destination branch
+    - what to do with uncommitted changes? We could use stash
+      to create a commit to track the changes, or we could refuse to run,
+      or just not worry about it and let the dev decide (maybe a -f or
+      --uncommitted)
+
+- [ ] `git charm push [--resource RES ...] [branch] [CSURI]`
+- [ ] `git charm publish -c [channel] [branch] [CSURI]`
+
+    - Really, these should be the same command where publishing occurs if
+      a channel is specified. But the charm-tools commands we need to wrap
+      seem to have some differences in how resources are handled.
+
+- [ ] `git charm layers`
+    - `git charm layers fetch`
+    - `git charm layers update [layer]`
+    - Layers are mostly in git. We could embed them as git subtrees.
+    - Solves the version pinning problem
+    - Lets you hack on a layer in your local tree and push changes upstream.
+    - Fallback to existing `LAYER_PATH` and `INTERFACE_PATH` if a non-git
+      repo is in play.
