@@ -204,6 +204,12 @@ publication. I think that git plugins would provide the best UI.
       to create a commit to track the changes, or we could refuse to run,
       or just not worry about it and let the dev decide (maybe a -f or
       --uncommitted)
+    - Maybe instead of building to a branch, we just build a tagged revision.
+      This would work the same, except the build revision would have a single
+      parent (the source branch) rather than two parents (the source branch
+      and the previous build).
+        - Fits nicer if you are creating builds from multiple source branches,
+          or multiple builds from the same source revision (eg. deps updated)
 
 - [ ] `git charm push [--resource RES ...] [branch] [CSURI]`
 - [ ] `git charm publish -c [channel] [branch] [CSURI]`
