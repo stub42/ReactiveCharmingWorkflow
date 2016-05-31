@@ -179,13 +179,13 @@ the code they are running:
     rm -rf tmp-built
 ```
 
-=== Makefile ===
+### Makefile
 
 The above guides can be converted to Makefile rules:
 
 https://github.com/stub42/ReactiveCharmingWorkflow/blob/master/Makefile
 
-=== Future ===
+### Future
 
 After documenting the above processes, it becomes apparent that charm-tools,
 charms.reactive and git still don't mesh well. From a developer perspective,
