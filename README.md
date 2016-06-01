@@ -187,38 +187,55 @@ https://github.com/stub42/ReactiveCharmingWorkflow/blob/master/Makefile
 
 ### Future
 
-After documenting the above processes, it becomes apparent that charm-tools,
-charms.reactive and git still don't mesh well. From a developer perspective,
-it is far too complex to say 'publish this branch'. With charms.reactive,
-a charm is now akin to a binary package and must first be built. charm-tools
-does not help, as it chose to be tool agnostic so you are stuck juggling
+I think that that charm-toolsm charms.reactive and git still don't mesh well.
+From a charmer perspective, it is far too complex to say
+'publish this branch'. With charms.reactive, a charm is now akin to a
+binary package and must first be built. charm-tools does not help, as it
+chose to be tool agnostic so you are stuck juggling
 all the VCS details yourself. I think a more opinionated tool would be
 much more transparent, providing charmers with the scafolding they need and
 being much easier to integrate with CI systems for testing and final
-publication. I think that git plugins would provide the best UI.
+publication.
 
-- [ ] `git charm build [--log] [-m msg] [branch]`
+The cheatsheet maintains your builds in a branch. This only makes sense if
+you are always building from the same source branch, and don't build
+from old revisions. The correct model seems to be that each build
+is a branch, with the source revision(s) as the parent. But that would
+mean lots and lots of branches, mixed up with your dev branches and
+causing confusion. So instead, we can build to a detached head and
+tag the result. But things get messy when you start detaching heads.
+And I'm not sure how to best keep the build in `$JUJU_REPOSITORY` in
+sync.
+
+I think some simple git plugins is the best UI
+
+
+- [ ] `git charm-build [--log] [-m msg] [--uncommitted] [branch]`
 
     - charm-build to the destination branch
-    - what to do with uncommitted changes? We could use stash
-      to create a commit to track the changes, or we could refuse to run,
-      or just not worry about it and let the dev decide (maybe a -f or
-      --uncommitted)
-    - Maybe instead of building to a branch, we just build a tagged revision.
-      This would work the same, except the build revision would have a single
-      parent (the source branch) rather than two parents (the source branch
-      and the previous build).
-        - Fits nicer if you are creating builds from multiple source branches,
-          or multiple builds from the same source revision (eg. deps updated)
+    - what to do with uncommitted changes? Refuse, or if overridden
+      use stash to store the uncommitted work as a commit and go from there.
 
-- [ ] `git charm push [--resource RES ...] [branch] [CSURI]`
-- [ ] `git charm publish -c [channel] [branch] [CSURI]`
+- [ ] `git charm-push [--resource RES ...] [branch] [CSURI]`
+- [ ] `git charm-publish -c [channel] [branch] [CSURI]`
 
     - Really, these should be the same command where publishing occurs if
       a channel is specified. But the charm-tools commands we need to wrap
       seem to have some differences in how resources are handled.
 
-- [ ] `git charm layers`
+- [ ] `git charm-deploy [tag]`
+
+    - Should this be juju-deploy? Deploy from git.
+    - Duplicates an existing juju plugin, so maybe not bother or
+      maybe wrap that to keep the UI consistent.
+
+- [ ] `git charm-switch [tag]`
+
+    - Do we need a shortcut to export a build to `JUJU_REPOSITORY`?
+    - Does this make sense with Juju2?
+
+
+- [ ] (later, maybe) `git charm layers`
     - `git charm layers fetch`
     - `git charm layers update [layer]`
     - Layers are mostly in git. We could embed them as git subtrees.
@@ -226,3 +243,29 @@ publication. I think that git plugins would provide the best UI.
     - Lets you hack on a layer in your local tree and push changes upstream.
     - Fallback to existing `LAYER_PATH` and `INTERFACE_PATH` if a non-git
       repo is in play.
+
+
+This is a workflow of building a charm, includinging uncommitted changes,
+to a detached head.
+
+```sh
+git stash save --all
+git stash apply
+mkdir -p .tmp-repo~/builds
+ln -s builds .tmp-repo~/trusty
+ln -s builds .tmp-repo~/xenial
+git worktree add --detach .tmp-repo~/src
+cd .tmp-repo~/src
+git stash pop
+git add .
+git commit -m 'Uncommitted changes'
+git worktree add --detach ../builds/$CNAME
+charm build -f -o .. -n $CNAME .
+cd ../builds/$CNAME
+git add .
+git commit -m "charm-build"
+git tag build-xxx
+cd ../../..
+rm -rf .tmp-repo~
+git worktree prune
+```
